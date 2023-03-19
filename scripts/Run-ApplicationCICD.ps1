@@ -89,9 +89,29 @@ begin {
         else {
             Write-Error "ARM_SUBSCRIPTION_ID does not exist"
         }
+        if ($env:ARM_ACR_CLIENT_ID) {
+            Write-Verbose "ARM__ACRCLIENT_ID is Set"
+        }
+        else {
+            Write-Host $env:ARM_ACR_CLIENT_ID
+            Write-Error "ARM_ACR_CLIENT_ID does not exist"
+        }
 
-        az login --service-principal --allow-no-subscriptions -u $env:ARM_CLIENT_ID -p $env:ARM_CLIENT_SECRET --tenant $env:ARM_TENANT_ID
-        az account set --subscription $env:ARM_SUBSCRIPTION_ID
+        if ($env:ARM_ACR_CLIENT_SECRET) {
+            Write-Verbose "ARM_ACR_CLIENT_SECRET is Set"
+        }
+        else {
+            Write-Error "ARM_ACR_CLIENT_SECRET does not exist"
+        }
+
+        if ($env:ARM_ACR_SUBSCRIPTION_ID) {
+            Write-Verbose "ARM_ACR_SUBSCRIPTION_ID is Set"
+        }
+        else {
+            Write-Error "ARM_ACR_SUBSCRIPTION_ID does not exist"
+        }
+        az login --service-principal --allow-no-subscriptions -u $env:ARM_ACR_CLIENT_ID -p $env:ARM_ACR_CLIENT_SECRET --tenant $env:ARM_TENANT_ID
+        az account set --subscription $env:ARM_ACR_SUBSCRIPTION_ID
     }
     else {
         if ((Get-AzContext -ErrorAction 0)) {
