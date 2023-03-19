@@ -147,6 +147,7 @@ process {
             $BuildCommandArgs += ("-r", $ApplicationBuildImageRegistry)
             $BuildCommandArgs += ("-f", $ApplicationBuildDockerfile)
             $BuildCommandArgs += ("", ".")
+            $BuildCommandArgs += ("", "--debug")
 
             Write-Verbose "Build Command: $BuildCommandArgs"
             Invoke-Expression("az acr build $($BuildCommandArgs -join ' ')")
