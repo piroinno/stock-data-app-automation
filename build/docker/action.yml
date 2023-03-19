@@ -34,7 +34,7 @@ runs:
     - name: 'Connect image'
       uses: azure/docker-login@v1
       with:
-        login-server: ${{ inputs.acrloginserver } }}
+        login-server: ${{ inputs.acrloginserver }}
         username: ${{ inputs.acrusername }}
         password: ${{ inputs.acrpassword }}
 
