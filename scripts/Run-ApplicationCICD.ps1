@@ -145,7 +145,7 @@ process {
                 $BuildArgs += " --build-arg {0}" -f $BuildArg
             }
             
-            az acr build $Tags --registry $ApplicationBuildImageRegistry --file $ApplicationBuildDockerfile $PushOption
+            az acr build $Tags -r $ApplicationBuildImageRegistry -f $ApplicationBuildDockerfile $PushOption --debug
             break
         }
         deploy {
