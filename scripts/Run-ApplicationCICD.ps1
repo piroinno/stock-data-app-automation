@@ -134,7 +134,7 @@ process {
 
             $Tags = $null
             foreach($Tag in ($ApplicationBuildTags -split ',')) {
-                $Tags += " --t {0}/{1}:{2}" -f $ApplicationBuildImageRepository, $ApplicationBuildImageName, $Tag.Trim()
+                $Tags += " -t {0}/{1}:{2}" -f $ApplicationBuildImageRepository, $ApplicationBuildImageName, $Tag.Trim()
             }
 
             $BuildArgs = $null
