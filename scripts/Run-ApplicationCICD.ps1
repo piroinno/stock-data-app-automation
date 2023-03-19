@@ -148,7 +148,7 @@ process {
             $BuildCommandArgs += ("-f", $ApplicationBuildDockerfile)
             $BuildCommandArgs += ("", ".")
 
-            Write-Verbose "Build Command: $BuildCommand"
+            Write-Verbose "Build Command: $BuildCommandArgs"
             Invoke-Expression("az acr build $($BuildCommandArgs -join ' ')")
             break
         }
