@@ -44,7 +44,7 @@ runs:
       shell: pwsh
       run: |
         # dirty hack to get the path to the action
-        $BasePath = "${{ github.action_path }}" -replace '/build', ''
+        $BasePath = "${{ github.action_path }}" -replace '/docker/build', ''
         $Script = "$BasePath/scripts/Run-ApplicationCICD.ps1"
         $ScriptParams =@()
         $ScriptParams += ("-LandingZoneNameRootPath", "${{ env.APP_LANDING_ZONE_ROOT_PATH }}")
