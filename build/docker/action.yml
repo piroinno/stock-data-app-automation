@@ -1,0 +1,57 @@
+name: Build application images
+description: "Build application images"
+inputs:
+  registryname:
+    description: "Registry name"
+    required: true
+  buildimagename:
+    description: "Build image name"
+    required: true
+  dockerfileargs:
+    description: "Dockerfile build arguments"
+    required: false
+  pushimage:
+    description: "Push image to registry"
+    required: false
+  acrloginserver:
+    description: "Azure Container Registry login"
+    required: true
+  acrusername:
+    description: "Azure Container Registry username"
+    required: true
+  acrpassword:
+    description: "Azure Container Registry password"
+    required: true
+  dockerfile:
+    description: "Dockerfile path"
+    required: false
+    
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: 'Connect image'
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ inputs.acrloginserver } }}
+        username: ${{ inputs.acrusername }}
+        password: ${{ inputs.acrpassword }}
+
+    - name: 'Build docker image'
+      shell: pwsh
+      run: |
+        $buildArgs = $null
+        foreach($buildArg in ${{ inputs.dockerfileargs }}.Split(',')) {
+          $buildArg = $buildArg.Trim()
+          $buildArg = $buildArg.Split('=')
+          $buildArg = $buildArg[0] + "='" + $buildArg[1] + "'"
+          $buildArgs += " --build-arg $buildArg"
+        }
+        docker build . -t ${{ inputs.registryname }}/${{ inputs.buildimagename }}:${{ github.sha }} $buildArgs
+
+    - name: 'Push docker image'
+      if: ${{ inputs.pushimage }}
+      shell: pwsh
+      run: |
+        docker push ${{ inputs.registryname }}/${{ inputs.buildimagename }}:${{ github.sha }}
