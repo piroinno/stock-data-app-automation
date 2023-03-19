@@ -10,8 +10,8 @@ inputs:
   automatedrun:
     description: "Automated run"
     required: true
-  isbuildonly:
-    description: "Is build only"
+  isbuilddryrun:
+    description: "Is build only. No push to registry"
     required: true
   applicationbuildtags:
     description: "Application build tags"
@@ -52,7 +52,7 @@ runs:
         $ScriptParams += ("-Environment", "${{ env.ENVIRONMENT }}")
         $ScriptParams += ("-ApplicationBuildPhase", "${{ inputs.applicationbuildphase }}")
         $ScriptParams += (, "-AutomatedRun:`$$([bool]::Parse("${{ inputs.automatedrun }}"))")
-        $ScriptParams += (, "-IsBuildOnly:`$$([bool]::Parse("${{ inputs.isbuildonly }}"))")
+        $ScriptParams += (, "-IsBuildDryRun:`$$([bool]::Parse("${{ inputs.isbuilddryrun }}"))")
         $ScriptParams += ("-ApplicationWorkingPath", "${{ env.APP_AUTO_WORKING_PATH }}")
         $ScriptParams += ("-ApplicationBuildTags", "'${{ inputs.applicationbuildtags }}'")
         $ScriptParams += ("-ApplicationBuildDockerfileArgs", "'${{ inputs.applicationbuilddockerfileargs }}'")
