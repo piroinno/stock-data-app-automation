@@ -127,14 +127,13 @@ process {
     switch ($ApplicationBuildPhase) {
         build {
             Write-Verbose "Starting Application Image Build"
-            $BuildCommand = "az acr build"
+            $BuildCommandArgs = @()
             if($IsBuildDryRun.IsPresent) {
-                $BuildCommand = "--no-push"
+                $BuildCommandArgs += ("", "--no-push")
             }
             
-            $Tags = $null
             foreach($Tag in ($ApplicationBuildTags -split ',')) {
-                $BuildCommand += " -t {0}/{1}:{2}" -f $ApplicationBuildImageRepository, $ApplicationBuildImageName, $Tag.Trim()
+                $BuildCommandArgs += ("-t", ("{0}/{1}:{2}" -f $ApplicationBuildImageRepository, $ApplicationBuildImageName, $Tag.Trim()))
             }
 
             foreach($BuildArg in ($ApplicationBuildDockerfileArgs.Split(','))) {
@@ -142,11 +141,15 @@ process {
                 $BuildArg = $BuildArg.Split('=')
                 $BuildArg = "{0}='{1}'" -f $BuildArg[0], $BuildArg[1]
                 $BuildCommand += " --build-arg {0}" -f $BuildArg
+                $BuildCommandArgs += ("--build-arg", $BuildArg.Trim())
             }
 
-            $BuildCommand = "{0} {1}" -f $BuildCommand, "-r $ApplicationBuildImageRegistry -f $ApplicationBuildDockerfile ."
+            $BuildCommandArgs += ("-r", $ApplicationBuildImageRegistry)
+            $BuildCommandArgs += ("-f", $ApplicationBuildDockerfile)
+            $BuildCommandArgs += ("", ".")
+
             Write-Verbose "Build Command: $BuildCommand"
-            Invoke-Expression($BuildCommand)
+            Invoke-Expression("az acr build $($BuildCommandArgs -join ' ')")
             break
         }
         deploy {
