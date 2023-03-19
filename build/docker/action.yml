@@ -1,57 +1,66 @@
 name: Build application images
 description: "Build application images"
 inputs:
-  registryname:
-    description: "Registry name"
+  appfolder:
+    description: "Application folder"
     required: true
-  buildimagename:
-    description: "Build image name"
+  applicationbuildphase:
+    description: "Application build phase"
     required: true
-  dockerfileargs:
-    description: "Dockerfile build arguments"
-    required: false
-  pushimage:
-    description: "Push image to registry"
-    required: false
-  acrloginserver:
-    description: "Azure Container Registry login"
+  automatedrun:
+    description: "Automated run"
     required: true
-  acrusername:
-    description: "Azure Container Registry username"
+  isbuildonly:
+    description: "Is build only"
     required: true
-  acrpassword:
-    description: "Azure Container Registry password"
+  applicationbuildtags:
+    description: "Application build tags"
     required: true
-  dockerfile:
-    description: "Dockerfile path"
-    required: false
+  applicationbuilddockerfileargs:
+    description: "Application build dockerfile args"
+    required: true
+  applicationbuildimagename:
+    description: "Application build image name"
+    required: true
+  applicationbuilddefaulttag:
+    description: "Application build default tag"
+    required: true
+  applicationbuildimageregistry:
+    description: "Application build image registry"
+    required: true
+  applicationbuildimagerepository:
+    description: "Application build image repository"
+    required: true
+  applicationbuilddockerfile:
+    description: "Application build dockerfile"
+    required: true
     
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v3
 
-    - name: 'Connect image'
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ inputs.acrloginserver }}
-        username: ${{ inputs.acrusername }}
-        password: ${{ inputs.acrpassword }}
-
-    - name: 'Build docker image'
+    - name: Build docker image
       shell: pwsh
       run: |
-        $buildArgs = $null
-        foreach($buildArg in ${{ inputs.dockerfileargs }}.Split(',')) {
-          $buildArg = $buildArg.Trim()
-          $buildArg = $buildArg.Split('=')
-          $buildArg = $buildArg[0] + "='" + $buildArg[1] + "'"
-          $buildArgs += " --build-arg $buildArg"
-        }
-        docker build . -t ${{ inputs.registryname }}/${{ inputs.buildimagename }}:${{ github.sha }} $buildArgs
+        # dirty hack to get the path to the action
+        $BasePath = "${{ github.action_path }}" -replace '/build', ''
+        $Script = "$BasePath/scripts/Run-ApplicationCICD.ps1"
+        $ScriptParams =@()
+        $ScriptParams += ("-LandingZoneNameRootPath", "${{ env.APP_LANDING_ZONE_ROOT_PATH }}")
+        $ScriptParams += ("-AppFolder", "${{ inputs.appfolder }}")
+        $ScriptParams += ("-Environment", "${{ env.ENVIRONMENT }}")
+        $ScriptParams += ("-ApplicationBuildPhase", "${{ inputs.applicationbuildphase }}")
+        $ScriptParams += (, "-AutomatedRun:`$$([bool]::Parse("${{ inputs.automatedrun }}"))")
+        $ScriptParams += (, "-IsBuildOnly:`$$([bool]::Parse("${{ inputs.isbuildonly }}"))")
+        $ScriptParams += ("-ApplicationWorkingPath", "${{ env.APP_AUTO_WORKING_PATH }}")
+        $ScriptParams += ("-ApplicationBuildTags", "${{ inputs.applicationbuildtags }}")
+        $ScriptParams += ("-ApplicationBuildDockerfileArgs", "${{ inputs.applicationbuilddockerfileargs }}")
+        $ScriptParams += ("-ApplicationBuildImageName", "${{ inputs.applicationbuildimagename }}")
+        $ScriptParams += ("-ApplicationBuildDefaultTag", "${{ inputs.applicationbuilddefaulttag }}")
+        $ScriptParams += ("-ApplicationBuildImageRegistry", "${{ inputs.applicationbuildimageregistry }}")
+        $ScriptParams += ("-ApplicationBuildImageRepository", "${{ inputs.applicationbuildimagerepository }}")
+        $ScriptParams += ("-ApplicationBuildDockerfile", "${{ inputs.applicationbuilddockerfile }}")
 
-    - name: 'Push docker image'
-      if: ${{ inputs.pushimage }}
-      shell: pwsh
-      run: |
-        docker push ${{ inputs.registryname }}/${{ inputs.buildimagename }}:${{ github.sha }}
+        
+        Invoke-Expression "$Script $($ScriptParams -join ' ')"
