@@ -59,9 +59,7 @@ runs:
         }else{
           $patch += $run_attempt
         }
-        poetry version patch $patch
-        poetry version minor $minor
-        poetry version major $major
+        poetry version "$patch.$minor.$major"
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
