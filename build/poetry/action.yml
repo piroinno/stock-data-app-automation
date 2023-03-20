@@ -39,25 +39,28 @@ runs:
         poetry install
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
     - name: Create application package
-      shell: bash
+      shell: pwsh
       run: |
-        major=$(poetry version | cut -d. -f1)
-        minor=$(poetry version | cut -d. -f2)
-        patch=$(poetry version | cut -d. -f3)
-        run_attempt=${{ github.run_attempt }}
-        if [[ ($run_attempt + $patch) > 100 ]]; then
-          $patch = 0
-          if [[ (1 + $minor > 100) ]]; then
-            $minor = 0
-            $major = $major + 1
-          else
-            $minor = $minor + $run_attempt
-          fi
-        else
-          $patch = $patch + $run_attempt
-        fi
+        $poetry_version = poetry version
+        $major= ($poetry_version -split '.')[0]
+        $minor= ($poetry_version -split '.')[1]
+        $patch= ($poetry_version -split '.')[2]
 
-        poetry version $major.$minor.$patch
+        $run_attempt=${{ github.run_attempt }}
+
+        if($run_attempt + $patch) > 100){
+          $patch = 0
+          if ((1 + $minor) > 100){
+            $minor = 0
+            $major += 1
+          }else{
+            $minor += $run_attempt
+          }
+        }else{
+          $patch += $run_attempt
+        }
+
+        poetry version "$major.$minor.$patch"
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
