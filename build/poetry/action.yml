@@ -1,5 +1,5 @@
-name: Build application images
-description: "Build application images"
+name: Package application
+description: "Package application"
 inputs:
   packagefeed:
     description: "Azure package feed"
@@ -7,9 +7,6 @@ inputs:
   packagefeedpassword:
     description: "Azure package feed password"
     required: true
-  flagsmithenvironmentkey:
-    description: "Flagsmith environment key"
-    required: false
     
 runs:
   using: "composite"
@@ -37,13 +34,14 @@ runs:
     - name: Installing dependencies
       shell: bash
       run: |
-        poetry source add --secondary pypifeed "https://${{ inputs.packagefeed }}"
-        poetry config http-basic.pypifeed pypifeed ${{ inputs.packagefeedpassword }}
+        poetry source add --secondary downloadfeed "https://${{ inputs.packagefeed }}/simple"
+        poetry config http-basic.downloadfeed downloadfeed ${{ inputs.packagefeedpassword }}
         poetry install
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
-    - name: Linting with flake8
+    - name: Create application package
       shell: bash
       run: |
-        pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        poetry build --format wheel
+        poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
+        poetry config http-basic.uploadloadfeed uploadloadfeed ${{ inputs.packagefeedpassword }}
+        poetry publish -r uploadloadfeed
