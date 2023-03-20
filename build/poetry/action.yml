@@ -46,7 +46,7 @@ runs:
         $minor= ($poetry_version -split '.')[1]
         $patch= ($poetry_version -split '.')[2]
 
-        $run_attempt=${{ github.run_attempt }}
+        $run_attempt=${{ github.run_number }}
 
         if(($run_attempt + $patch) -gt 100){
           $patch = 0
