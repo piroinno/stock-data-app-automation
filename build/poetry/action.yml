@@ -48,7 +48,7 @@ runs:
 
         $run_attempt=${{ github.run_attempt }}
 
-        if($run_attempt + $patch) > 100){
+        if(($run_attempt + $patch) > 100){
           $patch = 0
           if ((1 + $minor) > 100){
             $minor = 0
