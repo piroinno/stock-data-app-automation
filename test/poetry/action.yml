@@ -53,5 +53,5 @@ runs:
         pip install pytest
         poetry run python -m pytest
       env:
-        DATABASE_URL: postgresql://postgres:${{ inputs.testdatabasepassword }}@postgres:5432/postgres
+        DATABASE_URL: postgresql://postgres:${{ inputs.testdatabasepassword }}@${{ env.POSTGRES_HOST }}:5432/postgres
         FLAG_SMITH_ENVIRONMENT_KEY: ${{ inputs.flagsmithenvironmentkey }}
