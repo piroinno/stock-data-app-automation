@@ -7,6 +7,9 @@ inputs:
   packagefeedpassword:
     description: "Azure package feed password"
     required: true
+  packagefeedmetadata:
+    description: "Azure package feed metadata"
+    required: true
 
 runs:
   using: "composite"
@@ -43,7 +46,7 @@ runs:
       run: |
         $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
         $header = @{authorization = "Basic $token"}
-        $allPackagesUrl = "https://feeds.dev.azure.com/piroinno/StockData/_apis/packaging/Feeds/pypifeed/packages?api-version=7.0&packageNameQuery=${{ github.event.repository.name }}"
+        $allPackagesUrl = "https://${{ inputs.packagefeedmetadata }}${{ github.event.repository.name }}"
         $package = (Invoke-WebRequest -Uri $allPackagesUrl -Headers $header -UseBasicParsing).Content | ConvertFrom-Json
         $packageVersion = $package.value.versions | ?{$_.isLatest -eq $true} | select version
         $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
@@ -62,7 +65,7 @@ runs:
             $patch++
         }
 
-        poetry version " $major.$minor.$patch"
+        poetry version "$major.$minor.$patch".Trim()
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
