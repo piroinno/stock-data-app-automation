@@ -48,17 +48,18 @@ runs:
         $packageVersion = $package.value.versions | ?{$_.isLatest -eq $true} | select version
         $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
         
-        if($patch -eq 9) {
+        if ($patch -eq 9) {
           $patch = 0
-          $minor++
-        } else {
-          $patch++
+          if ($minor -eq 9 -or $minor -gt 9) {
+              $minor = 0
+              $major++
+          }
+          else {
+              $minor++
+          }
         }
-        if($minor -eq 9 -or $minor -gt 9) {
-          $minor = 0
-          $major++
-        } else {
-          $minor++
+        else {
+            $patch++
         }
 
         poetry version $packageVersion
