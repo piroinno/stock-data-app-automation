@@ -62,7 +62,7 @@ runs:
             $patch++
         }
 
-        poetry version $packageVersion
+        poetry version " $major.$minor.$patch"
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
