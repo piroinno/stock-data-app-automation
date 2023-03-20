@@ -41,27 +41,13 @@ runs:
     - name: Create application package
       shell: pwsh
       run: |
-        $poetry_version = poetry version
-        $major= ($poetry_version -split '.')[0]
-        $minor= ($poetry_version -split '.')[1]
-        $patch= ($poetry_version -split '.')[2]
-
-        $run_attempt=${{ github.run_number }}
-
-        if(($run_attempt + $patch) -gt 100){
-          $patch = 0
-          if ((1 + $minor) -gt 100){
-            $minor = 0
-            $major += 1
-          }else{
-            $minor += $run_attempt
-          }
-        }else{
-          $patch += $run_attempt
-        }
-        poetry version major $major
-        poetry version minor $minor
-        poetry version patch $patch
+        $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$(${{ inputs.packagefeedpassword }})"))
+        $header = @{authorization = "Basic $token"}
+        $allPackagesUrl = "GET https://${{ $inputs.packagefeed }}/packages?api-version=7.1-preview.11&packageNameQuery=${{ github.event.repository.name }}" -replace "_packaging", "_apis/packaging/Feeds"
+        $package = Invoke-RestMethod -Uri $url -Headers $header -Method Get | ConvertFrom-Json
+        $packageVersion = $package.value[0].versions[0].version
+        $package
+        $packageVersion
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
