@@ -41,13 +41,27 @@ runs:
     - name: Create application package
       shell: pwsh
       run: |
-        $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$(${{ inputs.packagefeedpassword }})"))
+        $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
         $header = @{authorization = "Basic $token"}
-        $allPackagesUrl = "GET https://${{ $inputs.packagefeed }}/packages?api-version=7.1-preview.11&packageNameQuery=${{ github.event.repository.name }}" -replace "_packaging", "_apis/packaging/Feeds"
-        $package = Invoke-RestMethod -Uri $url -Headers $header -Method Get | ConvertFrom-Json
-        $packageVersion = $package.value[0].versions[0].version
-        $package
-        $packageVersion
+        $allPackagesUrl = ("https://${{ inputs.packagefeed }}/packages?api-version=7.1-preview.11&packageNameQuery=${{ github.event.repository.name }}".Replace("_packaging", "_apis/packaging/Feeds")).Replace("pkgs", "feeds") 
+        $package = Invoke-RestMethod -Uri $url -Headers $header -Method Get
+        $packageVersion = $package.value.versions | ?{$_.isLatest -eq $true} | select version
+        $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
+        
+        if($patch -eq 9) {
+          $patch = 0
+          $minor++
+        } else {
+          $patch++
+        }
+        if($minor -eq 9 -or $minor -gt 9) {
+          $minor = 0
+          $major++
+        } else {
+          $minor++
+        }
+
+        poetry version $packageVersion
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
