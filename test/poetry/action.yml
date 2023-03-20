@@ -43,7 +43,7 @@ runs:
     - name: Installing dependencies
       shell: bash
       run: |
-        poetry source add --secondary pypifeed "https://${{ inputs.packagefeed }}"
+        poetry source add --secondary pypifeed "https://${{ inputs.packagefeed }}/simple"
         poetry config http-basic.pypifeed pypifeed ${{ inputs.packagefeedpassword }}
         poetry install
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
