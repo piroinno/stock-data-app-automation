@@ -1,5 +1,5 @@
-name: Build application images
-description: "Build application images"
+name: Testing application packages
+description: "Testing application packages"
 inputs:
   packagefeed:
     description: "Azure package feed"
@@ -41,9 +41,11 @@ runs:
         poetry config http-basic.pypifeed pypifeed ${{ inputs.packagefeedpassword }}
         poetry install
       if: steps.cached-dependencies.outputs.cache-hit != 'true'
-    - name: Linting with flake8
+    - name: Testing with pytest
       shell: bash
       run: |
-        pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        pip install pytest
+        poetry run python -m pytest
+      env:
+        DATABASE_URL: postgresql://postgres:${{ inputs.testdatabasepassword }}@localhost:5432/postgres
+        FLAG_SMITH_ENVIRONMENT_KEY: ${{ inputs.flagsmithenvironmentkey }}
