@@ -1,0 +1,66 @@
+name: Build application images
+description: "Build application images"
+inputs:
+  appfolder:
+    description: "Application folder"
+    required: true
+  applicationbuildphase:
+    description: "Application build phase"
+    required: true
+  automatedrun:
+    description: "Automated run"
+    required: true
+  isbuilddryrun:
+    description: "Is build only. No push to registry"
+    required: true
+  applicationbuildtags:
+    description: "Application build tags"
+    required: true
+  applicationbuilddockerfileargs:
+    description: "Application build dockerfile args"
+    required: true
+  applicationbuildimagename:
+    description: "Application build image name"
+    required: true
+  applicationbuilddefaulttag:
+    description: "Application build default tag"
+    required: true
+  applicationbuildimageregistry:
+    description: "Application build image registry"
+    required: true
+  applicationbuildimagerepository:
+    description: "Application build image repository"
+    required: true
+  applicationbuilddockerfile:
+    description: "Application build dockerfile"
+    required: true
+    
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Build docker image
+      shell: pwsh
+      run: |
+        # dirty hack to get the path to the action
+        $BasePath = "${{ github.action_path }}" -replace '/build/docker', ''
+        $Script = "$BasePath/scripts/Run-ApplicationCICD.ps1"
+        $ScriptParams =@()
+        $ScriptParams += ("-LandingZoneNameRootPath", "${{ env.APP_LANDING_ZONE_ROOT_PATH }}")
+        $ScriptParams += ("-AppFolder", "${{ inputs.appfolder }}")
+        $ScriptParams += ("-Environment", "${{ env.ENVIRONMENT }}")
+        $ScriptParams += ("-ApplicationBuildPhase", "${{ inputs.applicationbuildphase }}")
+        $ScriptParams += (, "-AutomatedRun:`$$([bool]::Parse("${{ inputs.automatedrun }}"))")
+        $ScriptParams += (, "-IsBuildDryRun:`$$([bool]::Parse("${{ inputs.isbuilddryrun }}"))")
+        $ScriptParams += ("-ApplicationWorkingPath", "${{ env.APP_AUTO_WORKING_PATH }}")
+        $ScriptParams += ("-ApplicationBuildTags", "'${{ inputs.applicationbuildtags }}'")
+        $ScriptParams += ("-ApplicationBuildDockerfileArgs", "'${{ inputs.applicationbuilddockerfileargs }}'")
+        $ScriptParams += ("-ApplicationBuildImageName", "${{ inputs.applicationbuildimagename }}")
+        $ScriptParams += ("-ApplicationBuildDefaultTag", "${{ inputs.applicationbuilddefaulttag }}")
+        $ScriptParams += ("-ApplicationBuildImageRegistry", "${{ inputs.applicationbuildimageregistry }}")
+        $ScriptParams += ("-ApplicationBuildImageRepository", "${{ inputs.applicationbuildimagerepository }}")
+        $ScriptParams += ("-ApplicationBuildDockerfile", "${{ inputs.applicationbuilddockerfile }}")
+
+        
+        Invoke-Expression "$Script $($ScriptParams -join ' ')"
