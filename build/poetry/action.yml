@@ -43,7 +43,7 @@ runs:
       run: |
         $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
         $header = @{authorization = "Basic $token"}
-        $allPackagesUrl = ("https://${{ inputs.packagefeed }}/packages?api-version=7.0&packageNameQuery=${{ github.event.repository.name }}" -replace "_packaging", "_apis/packaging/Feeds") -replace "pkgs", "feeds"
+        $allPackagesUrl = "https://feeds.dev.azure.com/piroinno/StockData/_apis/packaging/Feeds/pypifeed/packages?api-version=7.0&packageNameQuery=${{ github.event.repository.name }}"
         $package = Invoke-WebRequest -Uri $allPackagesUrl -Headers $header -UseBasicParsing | ConvertFrom-Json
         $packageVersion = $package.Content.value.versions | ?{$_.isLatest -eq $true} | select version
         $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
