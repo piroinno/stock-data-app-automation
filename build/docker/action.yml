@@ -43,10 +43,10 @@ runs:
       shell: pwsh
       run: |
         $scratch = (New-Guid).Guid
-        $env:GITHUB_ENV += "SCRATCH=$scratch"
+        "SCRATCH=$scratch" >> $env:GITHUB_ENV
         $scratch_path = "${{ env.APP_AUTO_WORKING_PATH }}/$scratch"
         New-Item -ItemType Directory -Path $scratch_path
-        $env:GITHUB_ENV += "SCRATCH_PATH=$scratch_path"
+        "SCRATCH_PATH=$scratch_path" >> $env:GITHUB_ENV
     - name: Build docker image
       shell: pwsh
       run: |
