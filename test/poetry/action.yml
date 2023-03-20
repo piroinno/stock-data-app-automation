@@ -16,6 +16,9 @@ inputs:
   testdatabasehost:
     description: "Test database host"
     required: false
+  appfolder:
+    description: "Application folder"
+    required: false
   
 runs:
   using: "composite"
@@ -43,6 +46,7 @@ runs:
     - name: Installing dependencies
       shell: bash
       run: |
+        cd ${{ inputs.appfolder }}
         poetry source add --secondary pypifeed "https://${{ inputs.packagefeed }}/simple"
         poetry config http-basic.pypifeed pypifeed ${{ inputs.packagefeedpassword }}
         poetry install
@@ -50,12 +54,14 @@ runs:
     - name: Linting with flake8
       shell: bash
       run: |
+        cd ${{ inputs.appfolder }}
         pip install flake8
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Testing with pytest
       shell: bash
       run: |
+        cd ${{ inputs.appfolder }}
         pip install pytest
         poetry run python -m pytest
       env:
