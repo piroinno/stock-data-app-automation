@@ -43,4 +43,5 @@ runs:
       run: |
         poetry build --format wheel
         poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
+        poetry version patch
         poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}
