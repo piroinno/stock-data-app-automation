@@ -44,8 +44,7 @@ runs:
         $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
         $header = @{authorization = "Basic $token"}
         $allPackagesUrl = ("https://${{ inputs.packagefeed }}/packages?api-version=7.0&packageNameQuery=${{ github.event.repository.name }}" -replace "_packaging", "_apis/packaging/Feeds") -replace "pkgs", "feeds"
-        $allPackagesUrl
-        $package = Invoke-RestMethod -Uri $url -Headers $header -Method Get
+        $package = Invoke-RestMethod -Uri $allPackagesUrl -Headers $header -Method Get
         $packageVersion = $package.value.versions | ?{$_.isLatest -eq $true} | select version
         $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
         
