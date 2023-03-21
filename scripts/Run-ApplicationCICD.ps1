@@ -137,7 +137,7 @@ begin {
     Set-Location -Path $ApplicationWorkingPath
 
     Write-Verbose "Copying Resource Files from $ApplicationPath to $ApplicationWorkingPath"
-    Copy-Item -Path (Set-PathSlashes(("{0}\*" -f $ApplicationPath))) -Destination $ApplicationWorkingPath -Exclude "envs", ".terraform" -Force -Verbose
+    Copy-Item -Path (Set-PathSlashes(("{0}\*" -f $ApplicationPath))) -Destination $ApplicationWorkingPath -Exclude "envs", ".terraform" -Recurse -Force -Verbose
 
     Write-Verbose "Listing Files in $ApplicationWorkingPath"
     Get-Item -Path (Set-PathSlashes(("{0}\*" -f $ApplicationWorkingPath)))
