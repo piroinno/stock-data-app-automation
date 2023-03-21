@@ -10,6 +10,9 @@ inputs:
   packagefeedmetadata:
     description: "Azure package feed metadata"
     required: true
+  appfolder:
+    description: "Application folder"
+    required: true
 
 runs:
   using: "composite"
@@ -37,6 +40,7 @@ runs:
     - name: Installing dependencies
       shell: bash
       run: |
+        cd ${{ inputs.appfolder }}
         poetry source add --secondary downloadfeed "https://${{ inputs.packagefeed }}/simple"
         poetry config http-basic.downloadfeed downloadfeed ${{ inputs.packagefeedpassword }}
         poetry install
@@ -44,6 +48,7 @@ runs:
     - name: Create application package
       shell: pwsh
       run: |
+        cd ${{ inputs.appfolder }}
         $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
         $header = @{authorization = "Basic $token"}
         $allPackagesUrl = "https://${{ inputs.packagefeedmetadata }}${{ github.event.repository.name }}"
