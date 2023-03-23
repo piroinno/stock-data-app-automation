@@ -1,0 +1,45 @@
+name: Deploy manifests to Kubernetes
+description: "Build application images"
+
+inputs:
+  image:
+    description: "Image to deploy"
+    required: true
+  mainbranch:
+    description: "Main branch"
+    required: true
+  statebranch:
+    description: "State branch"
+    required: true
+  prmessage:
+    description: "PR message"
+    default: "Created by Github action"
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: Checkout state
+      shell: pwsh
+      run: |
+        git checkout state
+    - name: Update state
+      shell: pwsh
+      run: |
+        # Lets replace all the variables in the state file
+        # update the image version
+        $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Filter *.yaml,*.yml -Recurse
+        foreach($Manifest in $Manifests)
+        {
+          $ManifestContent = Get-Content -Path $Manifest.FullName
+          $ManifestContent = $ManifestContent -replace "{{IMAGE}}", ${{ inpts.image }}
+          $ManifestContent | Set-Content -Path $Manifest.FullName
+        }
+    - name: Commit and pr state
+      shell: pwsh
+      run: |
+        git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
+        git commit -m "Updated state"
+        gh pr create -B ${{ inputs.statebranch }} -H ${{ inputs.mainbranch }} --title "Merge ${{ inputs.statebranch }} into ${{ inputs.mainbranch }}" --body "${{ inputs.prmessage }}"
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
