@@ -50,7 +50,7 @@ runs:
     - name: Commit and pr to state
       shell: pwsh
       run: |
-        if((git diff --quiet)){
+        if((git status --porcelain)){
           git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
           git commit -m "Updated state"
           gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge "temp-${{ github.run_id }}" into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
