@@ -20,6 +20,15 @@ runs:
     - uses: actions/checkout@v3
       with:
         ref: ${{ inputs.statebranch }}
+
+    - name: Create new temp branch
+      shell: pwsh
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git checkout -b "temp-${{ github.run_id }}"
+        git merge ${{ inputs.mainbranch }}
+
     - name: Update state
       shell: pwsh
       run: |
@@ -32,11 +41,11 @@ runs:
           $ManifestContent = $ManifestContent -replace "{{IMAGE}}", ${{ inputs.image }}
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
-    - name: Commit and pr state
+    - name: Commit and pr to state
       shell: pwsh
       run: |
         git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
         git commit -m "Updated state"
-        gh pr create -B ${{ inputs.statebranch }} -H ${{ inputs.mainbranch }} --title "Merge ${{ inputs.statebranch }} into ${{ inputs.mainbranch }}" --body "${{ inputs.prmessage }}"
+        gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge "temp-${{ github.run_id }}" into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
       env:
         GITHUB_TOKEN: ${{ github.token }}
