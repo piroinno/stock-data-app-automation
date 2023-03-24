@@ -38,8 +38,8 @@ runs:
       run: |
         # Lets replace all the variables in the state file
         # update the image version
-        if((Test-Path -Path "${{ inputs.approotpath }}/gitops/scaling")){
-          $Manifests = Get-ChildItem -Path ${{ inputs.approotpath }}/gitops/scaling -Include *.yaml,*.yml -Recurse
+        if((Test-Path -Path "${{ inputs.approotpath }}/gitops")){
+          $Manifests = Get-ChildItem -Path ${{ inputs.approotpath }}/gitops -Include *.yaml,*.yml -Recurse
         }
 
         $SubstituteArgs = "${{ inputs.substituteargs }}"
