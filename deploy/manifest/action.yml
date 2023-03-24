@@ -55,6 +55,7 @@ runs:
           git add *
           git commit -m "Updated state"
           git push --set-upstream origin "temp-${{ github.run_id }}"
+          Start-Sleep -s 10
           gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge temp-${{ github.run_id }} into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
         }else{
           Write-Host "No changes to commit"
