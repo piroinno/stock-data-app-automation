@@ -1,8 +1,8 @@
 name: Deploy manifests to Kubernetes
 description: "Build application images"
 inputs:
-  image:
-    description: "Image to deploy"
+  substituteargs:
+    description: "Substitute args"
     required: true
   mainbranch:
     description: "Main branch"
@@ -38,16 +38,22 @@ runs:
       run: |
         # Lets replace all the variables in the state file
         # update the image version
-        if((Test-Path -Path "${{ inputs.approotpath }}/gitops/scaling/manifests.yaml")){
-          $Manifests = Get-ChildItem -Path ${{ inputs.approotpath }}/gitops/scaling -Include *.yaml,*.yml -Recurse
+        if((Test-Path -Path "${{ inputs.approotpath }}/gitops")){
+          $Manifests = Get-ChildItem -Path ${{ inputs.approotpath }}/gitops -Include *.yaml,*.yml -Recurse
         }
 
-        foreach($Manifest in $Manifests){
+        $SubstituteArgs = "${{ inputs.substituteargs }}"
+
+        foreach ($Manifest in $Manifests) {
           $ManifestContent = Get-Content -Path $Manifest.FullName
-          $ManifestContent = $ManifestContent -replace "#{{IMAGE}}#", "${{ inputs.image }}"
+          foreach ($SubstituteArg in ($SubstituteArgs.Split(','))) {
+            $SubstituteArg = $SubstituteArg.Trim()
+            $SubstituteArg = $SubstituteArg.Split('=')
+            $ManifestContent = $ManifestContent -replace "#{{$($SubstituteArg[0])}}#", $SubstituteArg[1]
+          }
+                  
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
-        "test" > test.txt
     - name: Commit and pr to ${{ inputs.mainbranch }}
       shell: pwsh
       run: |
