@@ -1,0 +1,76 @@
+name: Package application
+description: "Package application"
+inputs:
+  packagefeed:
+    description: "Azure package feed"
+    required: true
+  packagefeedpassword:
+    description: "Azure package feed password"
+    required: true
+  packagefeedmetadata:
+    description: "Azure package feed metadata"
+    required: true
+  appfolder:
+    description: "Application folder"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: Setting up Python 3.11
+      uses: actions/setup-python@v2
+      id: installed-python-version
+      with:
+        python-version: 3.11
+    - name: Installing and configuring Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.3.2
+        virtualenvs-create: true
+        virtualenvs-path: ~/.venv
+        virtualenvs-in-project: false
+        installer-parallel: true
+    - name: Using Cache for Poetry Dependencies
+      uses: actions/cache@v2
+      id: cached-dependencies
+      with:
+        path: ~/.venv
+        key: venv-${{ runner.os }}-${{ steps.installed-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+    - name: Installing dependencies
+      shell: bash
+      run: |
+        cd ${{ inputs.appfolder }}
+        poetry source add --secondary downloadfeed "https://${{ inputs.packagefeed }}/simple"
+        poetry config http-basic.downloadfeed downloadfeed ${{ inputs.packagefeedpassword }}
+        poetry install
+      if: steps.cached-dependencies.outputs.cache-hit != 'true'
+    - name: Create application package
+      shell: pwsh
+      run: |
+        cd ${{ inputs.appfolder }}
+        $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":${{ inputs.packagefeedpassword }}"))
+        $header = @{authorization = "Basic $token"}
+        $allPackagesUrl = "https://${{ inputs.packagefeedmetadata }}${{ github.event.repository.name }}"
+        $package = (Invoke-WebRequest -Uri $allPackagesUrl -Headers $header -UseBasicParsing).Content | ConvertFrom-Json
+        $packageVersion = $package.value.versions | ?{$_.isLatest -eq $true} | select version
+        $major,$minor,$patch = $packageVersion.version.split(".") | % { [int]$_ }
+        
+        if ($patch -eq 9) {
+          $patch = 0
+          if ($minor -eq 9 -or $minor -gt 9) {
+              $minor = 0
+              $major++
+          }
+          else {
+              $minor++
+          }
+        }
+        else {
+            $patch++
+        }
+
+        poetry version "$major.$minor.$patch".Trim()
+        poetry build --format wheel
+        poetry config repositories.uploadloadfeed "https://${{ inputs.packagefeed }}/upload"
+        poetry publish -r uploadloadfeed -u uploadloadfeed -p ${{ inputs.packagefeedpassword }}

@@ -1,0 +1,64 @@
+name: Deploy manifests to Kubernetes
+description: "Build application images"
+inputs:
+  image:
+    description: "Image to deploy"
+    required: true
+  mainbranch:
+    description: "Main branch"
+    required: true
+  statebranch:
+    description: "State branch"
+    required: true
+  prmessage:
+    description: "PR message"
+    default: "Created by Github action"
+    required: false
+  approotpath:
+    description: "Application root path"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.statebranch }}
+
+    - name: Create new temp branch
+      shell: pwsh
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git checkout -b "temp-${{ github.run_id }}"
+        git fetch --unshallow
+        git merge --no-ff origin/${{ inputs.mainbranch }}
+
+    - name: Update state
+      shell: pwsh
+      run: |
+        # Lets replace all the variables in the state file
+        # update the image version
+        if((Test-Path -Path "${{ inputs.approotpath }}/gitops/scaling/manifests.yaml")){
+          $Manifests = Get-ChildItem -Path ${{ inputs.approotpath }}/gitops/scaling -Include *.yaml,*.yml -Recurse
+        }
+
+        foreach($Manifest in $Manifests){
+          $ManifestContent = Get-Content -Path $Manifest.FullName
+          $ManifestContent = $ManifestContent -replace "#{{IMAGE}}#", "${{ inputs.image }}"
+          $ManifestContent | Set-Content -Path $Manifest.FullName
+        }
+        "test" > test.txt
+    - name: Commit and pr to state
+      shell: pwsh
+      run: |
+        if((git status --porcelain)){
+          git add *
+          git commit -m "Updated state"
+          git push --set-upstream origin "temp-${{ github.run_id }}" --force
+          Start-Sleep -s 5
+          gh pr create -H "temp-${{ github.run_id }}" -B ${{ inputs.statebranch }} --title "Merge temp-${{ github.run_id }} into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
+        }else{
+          Write-Host "No changes to commit"
+        }
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
