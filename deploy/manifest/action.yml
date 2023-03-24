@@ -18,10 +18,8 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v3
-    - name: Checkout state
-      shell: pwsh
-      run: |
-        /usr/bin/git checkout --progress --force -B ${{ inputs.statebranch }} refs/remotes/origin/${{ inputs.statebranch }}
+      with:
+        ref: ${{ inputs.statebranch }}
     - name: Update state
       shell: pwsh
       run: |
