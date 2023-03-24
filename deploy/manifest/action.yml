@@ -35,7 +35,7 @@ runs:
       run: |
         # Lets replace all the variables in the state file
         # update the image version
-        if(Test-Path -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/manifests.yaml){
+        if((Test-Path -Path "${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/manifests.yaml")){
           $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Include *.yaml,*.yml -Recurse
         }
 
