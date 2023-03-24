@@ -21,7 +21,7 @@ runs:
     - name: Checkout state
       shell: pwsh
       run: |
-        git checkout state
+        /usr/bin/git checkout --progress --force -B ${{ inputs.statebranch }} refs/remotes/origin/${{ inputs.statebranch }}
     - name: Update state
       shell: pwsh
       run: |
