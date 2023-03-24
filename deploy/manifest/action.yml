@@ -47,6 +47,7 @@ runs:
           $ManifestContent = $ManifestContent -replace "{{IMAGE}}", "${{ inputs.image }}"
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
+        "test" | Oyt-File test.txt
     - name: Commit and pr to state
       shell: pwsh
       run: |
