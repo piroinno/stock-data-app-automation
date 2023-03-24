@@ -44,15 +44,15 @@ runs:
 
         $SubstituteArgs = "${{ inputs.substituteargs }}"
 
-        foreach($Manifest in $Manifests){
+        foreach ($Manifest in $Manifests) {
           $ManifestContent = Get-Content -Path $Manifest.FullName
           $ManifestContent = $ManifestContent -replace "#{{IMAGE}}#", "${{ inputs.image }}"
-          foreach($SubstituteArg in ($SubstituteArgs.Split(','))) {
+          foreach ($SubstituteArg in ($SubstituteArgs.Split(','))) {
             $SubstituteArg = $SubstituteArg.Trim()
             $SubstituteArg = $SubstituteArg.Split('=')
             $ManifestContent = $ManifestContent -replace "#{{$($SubstituteArg[0])}}#", $SubstituteArg[1]
           }
-          
+                  
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
     - name: Commit and pr to ${{ inputs.mainbranch }}
