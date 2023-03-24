@@ -35,9 +35,11 @@ runs:
       run: |
         # Lets replace all the variables in the state file
         # update the image version
-        $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Include *.yaml,*.yml -Recurse
-        foreach($Manifest in $Manifests)
-        {
+        if(Test-Path -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/manifests.yaml){
+          $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Include *.yaml,*.yml -Recurse
+        }
+
+        foreach($Manifest in $Manifests){
           $ManifestContent = Get-Content -Path $Manifest.FullName
           $ManifestContent = $ManifestContent -replace "{{IMAGE}}", "${{ inputs.image }}"
           $ManifestContent | Set-Content -Path $Manifest.FullName
@@ -45,8 +47,12 @@ runs:
     - name: Commit and pr to state
       shell: pwsh
       run: |
-        git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
-        git commit -m "Updated state"
-        gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge "temp-${{ github.run_id }}" into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
+        if((git diff --quiet)){
+          git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
+          git commit -m "Updated state"
+          gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge "temp-${{ github.run_id }}" into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
+        }else{
+          Write-Host "No changes to commit"
+        }
       env:
         GITHUB_TOKEN: ${{ github.token }}
