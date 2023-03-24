@@ -48,7 +48,7 @@ runs:
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
         "test" > test.txt
-    - name: Commit and pr to state
+    - name: Commit and pr to ${{ inputs.mainbranch }}
       shell: pwsh
       run: |
         if((git status --porcelain)){
