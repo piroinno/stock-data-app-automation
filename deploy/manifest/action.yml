@@ -1,6 +1,5 @@
 name: Deploy manifests to Kubernetes
 description: "Build application images"
-
 inputs:
   image:
     description: "Image to deploy"
@@ -32,7 +31,7 @@ runs:
         foreach($Manifest in $Manifests)
         {
           $ManifestContent = Get-Content -Path $Manifest.FullName
-          $ManifestContent = $ManifestContent -replace "{{IMAGE}}", ${{ inpts.image }}
+          $ManifestContent = $ManifestContent -replace "{{IMAGE}}", ${{ inputs.image }}
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
     - name: Commit and pr state
