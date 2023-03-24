@@ -46,7 +46,6 @@ runs:
 
         foreach ($Manifest in $Manifests) {
           $ManifestContent = Get-Content -Path $Manifest.FullName
-          $ManifestContent = $ManifestContent -replace "#{{IMAGE}}#", "${{ inputs.image }}"
           foreach ($SubstituteArg in ($SubstituteArgs.Split(','))) {
             $SubstituteArg = $SubstituteArg.Trim()
             $SubstituteArg = $SubstituteArg.Split('=')
