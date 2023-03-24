@@ -35,7 +35,7 @@ runs:
       run: |
         # Lets replace all the variables in the state file
         # update the image version
-        $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Filter *.yaml,*.yml -Recurse
+        $Manifests = Get-ChildItem -Path ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling -Include *.yaml,*.yml -Recurse
         foreach($Manifest in $Manifests)
         {
           $ManifestContent = Get-Content -Path $Manifest.FullName
