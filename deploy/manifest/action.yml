@@ -52,7 +52,7 @@ runs:
       shell: pwsh
       run: |
         if((git status --porcelain)){
-          git add ${{ env.APP_AUTO_WORKING_PATH }}/gitops/scaling/*
+          git add *
           git commit -m "Updated state"
           gh pr create -B "temp-${{ github.run_id }}" -H ${{ inputs.statebranch }} --title "Merge "temp-${{ github.run_id }}" into ${{ inputs.statebranch }}" --body "${{ inputs.prmessage }}"
         }else{
