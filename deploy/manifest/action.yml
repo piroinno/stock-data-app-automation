@@ -54,10 +54,10 @@ runs:
                   
           $ManifestContent | Set-Content -Path $Manifest.FullName
         }
-    - name: Commit and pr to ${{ inputs.mainbranch }}
+    - name: Commit and pr to ${{ inputs.statebranch }}
       shell: pwsh
       run: |
-        if((git status --porcelain)){
+        if((git diff --quiet HEAD ${{ inputs.statebranch }} -- gitops)){
           git add *
           git commit -m "Updated state"
           git push --set-upstream origin "temp-${{ github.run_id }}" --force
